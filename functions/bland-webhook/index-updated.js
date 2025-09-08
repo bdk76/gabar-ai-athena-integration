@@ -17,76 +17,7 @@ const pubsub = new PubSub();
 const secretClient = new SecretManagerServiceClient();
 const PROJECT_ID = 'gabar-ai-athena-integration';
 
-/**
- * Find available appointment matching preferred date/time
- */
-async function findMatchingAppointment(preferredDate, preferredTime) {
-    console.log(`Finding appointment for ${preferredDate} at ${preferredTime}`);
-    
-    // Get OAuth token
-    const tokenDoc = await firestore.collection('api_tokens').doc('athena-current').get();
-    if (!tokenDoc.exists) {
-        throw new Error('No valid token found');
-    }
-    const tokenData = tokenDoc.data();
-    
-    // Get secrets
-    const [practiceIdSecret] = await secretClient.accessSecretVersion({
-        name: `projects/${PROJECT_ID}/secrets/athena-practice-id/versions/latest`
-    });
-    const [departmentIdSecret] = await secretClient.accessSecretVersion({
-        name: `projects/${PROJECT_ID}/secrets/athena-department-id/versions/latest`
-    });
-    const [baseUrlSecret] = await secretClient.accessSecretVersion({
-        name: `projects/${PROJECT_ID}/secrets/athena-base-url/versions/latest`
-    });
-    
-    const practiceId = practiceIdSecret.payload.data.toString();
-    const departmentId = departmentIdSecret.payload.data.toString();
-    const baseUrl = baseUrlSecret.payload.data.toString();
-    
-    // Convert date to MM/DD/YYYY for Athena
-    const [year, month, day] = preferredDate.split('-');
-    const athenaDate = `${month}/${day}/${year}`;
-    
-    // Query for appointments on that date
-    const response = await axios.get(
-        `${baseUrl}/v1/${practiceId}/appointments/open`,
-        {
-            params: {
-                departmentid: departmentId,
-                startdate: athenaDate,
-                enddate: athenaDate
-            },
-            headers: {
-                'Authorization': `${tokenData.type} ${tokenData.token}`
-            }
-        }
-    );
-    
-    const appointments = response.data.appointments || [];
-    
-    // Find appointment closest to preferred time
-    const preferredMinutes = parseInt(preferredTime.split(':')[0]) * 60 + 
-                           parseInt(preferredTime.split(':')[1]);
-    
-    let bestMatch = null;
-    let minDiff = Infinity;
-    
-    for (const apt of appointments) {
-        const aptTime = apt.starttime;
-        const aptMinutes = parseInt(aptTime.split(':')[0]) * 60 + 
-                          parseInt(aptTime.split(':')[1]);
-        const diff = Math.abs(aptMinutes - preferredMinutes);
-        
-        if (diff < minDiff) {
-            minDiff = diff;
-            bestMatch = apt;
-        }
-    }
-    
-    return bestMatch;
-}
+
 
 // Main webhook handler for cleaned data
 app.post('/webhook/bland', async (req, res) => {
@@ -143,8 +74,8 @@ app.post('/webhook/bland', async (req, res) => {
         const docRef = await firestore.collection('patient_intake_queue').add(patientData);
         
         console.log(`✅ Patient queued: ${patientData.firstName} ${patientData.lastName}`);
-        if (appointmentData) {
-            console.log(`   With appointment: ${appointmentData.appointmentId}`);
+        if (patientData.appointmentId) {
+            console.log(`   With appointment: ${patientData.appointmentId}`);
         }
         
         // Trigger immediate processing
@@ -160,7 +91,7 @@ app.post('/webhook/bland', async (req, res) => {
             success: true,
             message: 'Patient intake processed',
             patientQueueId: docRef.id,
-            appointmentFound: !!appointmentData
+            appointmentFound: !!patientData.appointmentId
         });
         
     } catch (error) {
