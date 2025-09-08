@@ -1,0 +1,13 @@
+{
+  "name": "intake-processor",
+  "version": "1.0.0",
+  "description": "Processes patient intake queue for Gabar AI",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.0.0",
+    "@google-cloud/pubsub": "^4.0.0"
+  }
+}
