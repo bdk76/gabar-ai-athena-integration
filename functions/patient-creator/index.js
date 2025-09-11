@@ -271,7 +271,11 @@ exports.createAthenaPatient = async (message, context) => {
             patientId: athenaPatientId,
             lastName: patientData.lastName,
             activityType: 'PATIENT_CREATED',
-            status: 'success'
+            status: 'success',
+            callLength: patientData.callLength,
+            lastNodeId: patientData.lastNodeId,
+            patientRecordCreated: true,
+            bookedAppt: !!patientData.appointmentId
         })));
 
         return {

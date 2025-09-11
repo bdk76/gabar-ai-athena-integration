@@ -5,9 +5,14 @@ const basicAuth = require('express-basic-auth');
 const app = express();
 const firestore = new Firestore();
 
-// Basic auth for HIPAA compliance - CHANGE THIS PASSWORD!
+// Basic auth for HIPAA compliance - Credentials are now managed by environment variables
+const dashboardUsers = {};
+const dashboardUsername = process.env.DASHBOARD_USERNAME || 'gabaradmin';
+const dashboardPassword = process.env.DASHBOARD_PASSWORD || 'ChangeThisSecurePassword123!';
+dashboardUsers[dashboardUsername] = dashboardPassword;
+
 app.use(basicAuth({
-    users: { 'gabaradmin': 'ChangeThisSecurePassword123!' },
+    users: dashboardUsers,
     challenge: true,
     realm: 'Gabar AI Patient Dashboard'
 }));
@@ -192,8 +197,10 @@ app.get('/', async (req, res) => {
                             <th>Patient ID</th>
                             <th>Last Name</th>
                             <th>Last Activity</th>
-                            <th>Appointment ID</th>
-                            <th>Appointment Time</th>
+                            <th>Patient Record</th>
+                            <th>Booked Appt</th>
+                            <th>Call Length (s)</th>
+                            <th>Last Node</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -202,7 +209,7 @@ app.get('/', async (req, res) => {
     if (snapshot.empty) {
         html += `
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
                                 No patient activity recorded yet
                             </td>
                         </tr>`;
@@ -212,20 +219,24 @@ app.get('/', async (req, res) => {
             const lastActivity = data.lastActivity 
                 ? new Date(data.lastActivity._seconds * 1000).toLocaleString() 
                 : '-';
-            const appointmentDateTime = data.appointmentDateTime 
-                ? new Date(data.appointmentDateTime._seconds * 1000).toLocaleString() 
-                : '-';
             
             const hasAppointment = data.appointmentId ? 'badge-success' : 'badge-pending';
             const statusText = data.appointmentId ? 'Scheduled' : 'Pending';
+
+            const patientRecordCreated = data.patientRecordCreated ? '✅' : '❌';
+            const bookedAppt = data.bookedAppt ? '✅' : '❌';
+            const callLength = data.callLength ? data.callLength : '-';
+            const lastNode = data.lastNodeId ? data.lastNodeId : '-';
             
             html += `
                         <tr>
                             <td><span class="patient-id">${data.patientId || '-'}</span></td>
                             <td><span class="last-name">${data.lastName || '-'}</span></td>
                             <td><span class="timestamp">${lastActivity}</span></td>
-                            <td>${data.appointmentId || '-'}</td>
-                            <td>${appointmentDateTime}</td>
+                            <td>${patientRecordCreated}</td>
+                            <td>${bookedAppt}</td>
+                            <td>${callLength}</td>
+                            <td>${lastNode}</td>
                             <td><span class="badge ${hasAppointment}">${statusText}</span></td>
                         </tr>`;
         });

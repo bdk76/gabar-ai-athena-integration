@@ -23,7 +23,11 @@ exports.logPatientActivity = async (pubsubMessage, context) => {
         lastActivity: new Date(),
         appointmentId: data.appointmentId || null,
         appointmentDateTime: data.appointmentDateTime || null,
-        totalActivities: firestore.FieldValue.increment(1)
+        totalActivities: firestore.FieldValue.increment(1),
+        callLength: data.callLength,
+        lastNodeId: data.lastNodeId,
+        patientRecordCreated: data.patientRecordCreated,
+        bookedAppt: data.bookedAppt
     }, {merge: true});
     
     console.log(`Logged activity for patient ${data.lastName} (${data.patientId})`);
