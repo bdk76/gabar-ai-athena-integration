@@ -109,11 +109,17 @@ function buildStreetAddress(houseNumber, street) {
 
 // Format date from ISO to US format
 function formatDateForAthena(isoDate) {
-    if (!isoDate) return '';
+    if (!isoDate || typeof isoDate !== 'string') return '';
     
     const parts = isoDate.split('-');
     if (parts.length !== 3) return isoDate;
     
+    // Basic validation for year, month, and day
+    const [year, month, day] = parts.map(p => parseInt(p, 10));
+    if (isNaN(year) || isNaN(month) || isNaN(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+        return '';
+    }
+
     return `${parts[1]}/${parts[2]}/${parts[0]}`; // MM/DD/YYYY
 }
 
@@ -154,6 +160,7 @@ function getStateAbbreviation(stateName) {
 
 // Main patient creation function
 exports.createAthenaPatient = async (message, context) => {
+    console.log('--- RUNNING NEWLY DEPLOYED CODE ---');
     const patientData = JSON.parse(Buffer.from(message.data, 'base64').toString());
     
     console.log('Creating patient:', patientData.firstName, patientData.lastName);
@@ -190,7 +197,7 @@ exports.createAthenaPatient = async (message, context) => {
         
         // Validate required fields
         if (!patientData.firstName || !patientData.lastName || !formattedDob) {
-            throw new Error('Missing required fields: firstname, lastname, or DOB');
+            throw new Error(`Missing required fields: firstname, lastname, or DOB. Received DOB: ${patientData.dateOfBirth}`);
         }
         
         // Must have at least one contact method

@@ -1,0 +1,12 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "reprocess-failed-intakes.js",
+  "scripts": {
+    "start": "node reprocess-failed-intakes.js"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.0.0"
+  }
+}
