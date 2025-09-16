@@ -1,7 +1,7 @@
 {
   "name": "appointment-booker",
-  "version": "1.0.0",
-  "description": "Books appointments in AthenaHealth for Gabar AI",
+  "version": "2.0.0",
+  "description": "Books appointments in AthenaHealth after a patient has been created.",
   "main": "index.js",
   "engines": {
     "node": "20"

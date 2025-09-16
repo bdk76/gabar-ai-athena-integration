@@ -162,7 +162,7 @@ function getStateAbbreviation(stateName) {
 exports.createAthenaPatient = async (message, context) => {
     console.log('--- RUNNING NEWLY DEPLOYED CODE ---');
     const patientData = JSON.parse(Buffer.from(message.data, 'base64').toString());
-    
+    console.log('patientData: ', patientData);
     console.log('Creating patient:', patientData.firstName, patientData.lastName);
     
     try {

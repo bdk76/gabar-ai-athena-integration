@@ -23,7 +23,7 @@ exports.logPatientActivity = async (pubsubMessage, context) => {
         lastActivity: new Date(),
         appointmentId: data.appointmentId || null,
         appointmentDateTime: data.appointmentDateTime || null,
-        totalActivities: firestore.FieldValue.increment(1),
+        totalActivities: Firestore.FieldValue.increment(1),
         callLength: data.callLength,
         lastNodeId: data.lastNodeId,
         patientRecordCreated: data.patientRecordCreated,
