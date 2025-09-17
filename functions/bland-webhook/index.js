@@ -4,9 +4,14 @@ const functions = require('@google-cloud/functions-framework');
 const {Firestore} = require('@google-cloud/firestore');
 const {PubSub} = require('@google-cloud/pubsub');
 const crypto = require('crypto');
+const fs = require('fs');
 
 const firestore = new Firestore();
 const pubsub = new PubSub();
+
+// Load the webhook secret from the file path provided by the environment variable
+const secretPath = process.env.BLAND_WEBHOOK_SECRET;
+const webhookSecret = secretPath ? fs.readFileSync(secretPath, 'utf8') : undefined;
 
 functions.http('blandWebhook', async (req, res) => {
   const startTime = Date.now();
@@ -14,11 +19,10 @@ functions.http('blandWebhook', async (req, res) => {
   try {
     // Verify webhook signature
     const signature = req.headers['x-bland-signature'];
-    const secret = process.env.BLAND_WEBHOOK_SECRET;
     
-    if (signature && secret) {
+    if (signature && webhookSecret) {
       const expectedSignature = crypto
-        .createHmac('sha256', secret)
+        .createHmac('sha256', webhookSecret)
         .update(JSON.stringify(req.body))
         .digest('hex');
       
